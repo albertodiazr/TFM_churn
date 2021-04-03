@@ -15,24 +15,23 @@ def dataoveriew(df, message):
     print(df.nunique())
 
 
-def evaluate(classifier, features, target): 
-    X_train, X_test, y_train, y_test = train_test_split(features, target)
-    classifier.fit(X_train, y_train)
+def plot_roc_curve(classifier, X_test, y_test): 
 
     predictions = classifier.predict(X_test)
     probabilities = classifier.predict_proba(X_test)[:, 1]
 
-    acc = accuracy_score(y_test, predictions)
-    f1 = f1_score(y_test, predictions)
     auc = roc_auc_score(y_test, probabilities)
     fpr, tpr, threshold = roc_curve(y_test, probabilities)
     
+    print('ROC AUC score: {0:0.2f}'.format(auc))
+    
+    plt.plot([0,1],[0,1],ls = '--', c = 'grey')
     plt.plot(fpr, tpr)
     plt.xlabel('fpr')
     plt.ylabel('tpr')
     plt.gcf().set_size_inches(8, 6)
     
-    return acc, f1, 
+    return
 
 
 def plot_confusion_matrix(cm, classes,

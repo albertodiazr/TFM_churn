@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 import pickle
 
-def feature_engineering_data(data):
+def feature_engineering_data(data, fecha):
     
     data['Born Date'] = data['Born Date'].replace(np.nan, datetime(1970, 1, 1))
     data['Edad'] = 0
@@ -50,7 +50,7 @@ def feature_engineering_data(data):
     
     # Días hasta el 18/04/2021 si OP y hasta cuando se dio de baja si BAJA
     data['Dias_Activo'] = 0
-    fecha = datetime(2021, 4, 18)
+#    fecha = datetime(2021, 4, 18)
     
     for i in range(len(data['Installation Date'])):
         if data.loc[i, 'Monitoring Status'] == 0:
@@ -135,24 +135,38 @@ def machine_learning_model(data, data_to_result):
    
     proba_baja = pd.DataFrame(result, columns = ['Probabilidad de baja'])
     resultado = pd.concat([data_to_result, proba_baja], axis = 1)
-    st.write(resultado)
+
+    st.header("Customers with the highest likelihood of churning:")
+    
+    threshold = st.slider('Mostar clientes con probabilidad de baja superior a (%): ', 
+                          min_value=0.0, max_value=100.0, value = 70.0, step = 0.5)
+    resultado_filtrado = resultado[(resultado['Probabilidad de baja'] >= threshold/100)]
+    resultado_ordenado = resultado_filtrado.sort_values('Probabilidad de baja',ascending=False)
+    
+    st.write("Treshold seleccionado (%): ", threshold)
+    st.write("Número de clientes mostrados: ", resultado_ordenado.shape[0])    
+    st.write(resultado_ordenado)
 
 def main():
     
     st.title("Customer Churn Prediction app")
+    
+    st.file_uploader("Subir archivo")
+    fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18))
+
     st.header("Data Exploration")
         
     data = pd.read_excel('../data/test_com_valencia.xlsx')
     data.drop(['Unnamed: 0'],axis=1,inplace=True)
    
     st.subheader("Source Data")
+    st.write("Número de clientes en el archivo: ", data.shape[0]) 
     if st.checkbox("Show Source Data"):
         st.write(data)
-    
-    feature_engineering_data(data)
+   
+    feature_engineering_data(data, fecha)
     data_to_result = data.copy()
     show_countplot(data)
     machine_learning_model(data, data_to_result)
-
 
 main()

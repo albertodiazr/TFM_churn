@@ -8,8 +8,8 @@ import datetime as dt
 from tools import dataoveriew, plot_roc_curve, plot_confusion_matrix
 from datetime import datetime
 from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.metrics import confusion_matrix, classification_report, precision_recall_curve, plot_precision_recall_curve
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, roc_curve, average_precision_score
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 import pickle
@@ -94,7 +94,7 @@ def machine_learning_model(data, data_to_result):
                           'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Kit', 'Number Pay', 'Dias_Activo_sca',
                           'Quejas_sca', 'MT_sca', 'Monitoring Status']]    
 
-#    class_names = ['Activo','Baja']
+
     
     X = data_filtered.drop(['Monitoring Status'],axis=1)
     y = data_filtered['Monitoring Status']
@@ -112,26 +112,41 @@ def machine_learning_model(data, data_to_result):
         DT = pickle.load(open(filename, 'rb'))        
         y_pred = DT.predict(X)
         result = DT.predict_proba(X)[:,1].reshape(-1, 1)
+        accuracy = DT.score(X, y)
         
     elif classifier == "Logistic Regression":
         filename = '../mvp_pkl/LR_model.pkl'
         LR = pickle.load(open(filename, 'rb'))        
         y_pred = LR.predict(X)
         result = LR.predict_proba(X)[:,1].reshape(-1, 1)
+        accuracy = LR.score(X, y)
         
     elif classifier == "Random Forest":
         filename = '../mvp_pkl/rfc_model.pkl'
         rfc = pickle.load(open(filename, 'rb'))       
         y_pred = rfc.predict(X)
         result = rfc.predict_proba(X)[:,1].reshape(-1, 1)
-   
+        accuracy = rfc.score(X, y)
+    
     else:
         raise NotImplementedError()
 
-#    print(classification_report(y, y_pred ))       
+    class_names = ['Activo','Baja']
+
+    st.subheader("Metrics")
+    st.write("Accuracy: ", accuracy.round(2))
+    st.write("Precision: ", precision_score(y, y_pred, labels=class_names).round(2))
+    st.write("Recall: ", recall_score(y, y_pred, labels=class_names).round(2))
+
+    st.subheader("Confusion Matrix")
+
+    # Desactivar warning:
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+
     cm = confusion_matrix(y, y_pred)
-#    plot_confusion_matrix(cm, classes=class_names, title='Confusion matrix')
-    st.write("Confusion matrix: ", cm)  
+    plot_confusion_matrix(cm, classes=class_names, title='Confusion matrix')
+    st.pyplot()
+#    st.write("Confusion matrix: ", cm)  
    
     proba_baja = pd.DataFrame(result, columns = ['Probabilidad de baja'])
     resultado = pd.concat([data_to_result, proba_baja], axis = 1)
@@ -151,13 +166,25 @@ def main():
     
     st.title("Customer Churn Prediction app")
     
-    st.file_uploader("Subir archivo")
-    fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18))
+    uploaded_file = st.file_uploader("Subir archivo .xlsx", type="xlsx")
+    
+    if not uploaded_file:
+        st.warning('Por favor, sube un fichero')
+        st.stop()
+    
+    elif uploaded_file:
+        data = pd.read_excel(uploaded_file)
+    
+    data.drop(['Unnamed: 0'],axis=1,inplace=True)
+#        st.table(data)
 
+
+    fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18))
+    
     st.header("Data Exploration")
         
-    data = pd.read_excel('../data/test_com_valencia.xlsx')
-    data.drop(['Unnamed: 0'],axis=1,inplace=True)
+#    data = pd.read_excel('../data/test_com_valencia.xlsx')
+
    
     st.subheader("Source Data")
     st.write("Número de clientes en el archivo: ", data.shape[0]) 

@@ -21,10 +21,10 @@ def feature_engineering_data(data, fecha):
     fecha = datetime(2021, 4, 18)
 
     for i in range(len(data['Born Date'])):
-        if data.loc[i, 'Monitoring Status'] == 0:
+        if data.loc[i, 'Status'] == 0:
             data.loc[i,'Edad'] = ((fecha - data.loc[i,'Born Date']).days)/365
         else:
-            data.loc[i,'Edad'] = ((data.loc[i,'Monitoring Status Date'] - data.loc[i,'Born Date']).days)/365
+            data.loc[i,'Edad'] = ((data.loc[i,'Status Date'] - data.loc[i,'Born Date']).days)/365
     
     for i in range(len(data['Edad'])):
         if data.loc[i, 'Edad'] < 18:
@@ -52,11 +52,11 @@ def feature_engineering_data(data, fecha):
     data['Dias_Activo'] = 0
 #    fecha = datetime(2021, 4, 18)
     
-    for i in range(len(data['Installation Date'])):
-        if data.loc[i, 'Monitoring Status'] == 0:
-            data.loc[i,'Dias_Activo'] = (fecha - data.loc[i,'Installation Date']).days
+    for i in range(len(data['Start Date'])):
+        if data.loc[i, 'Status'] == 0:
+            data.loc[i,'Dias_Activo'] = (fecha - data.loc[i,'Start Date']).days
         else:
-            data.loc[i,'Dias_Activo'] = (data.loc[i,'Monitoring Status Date'] - data.loc[i,'Installation Date']).days
+            data.loc[i,'Dias_Activo'] = (data.loc[i,'Status Date'] - data.loc[i,'Start Date']).days
     
     return data
 
@@ -64,11 +64,11 @@ def feature_engineering_data(data, fecha):
 def show_countplot(data):
 
     st.subheader("Data Visualization")
-    feature_x = st.selectbox("Seleccionar variable para la X", ['Provincia','Gender', 'Housing Type', 'Tipo Instalacion', 'Labor Situation', 'Marital Status', 
-                       'Nationality', 'Rango_Edad', 'Income', 'Rango Kit', 'Number Pay'])
+    feature_x = st.selectbox("Seleccionar variable para la X", ['Provincia','Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status', 
+                       'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay'])
 
-    feature_seg = st.selectbox("Seleccionar variable para segmentar", ['Gender', 'Housing Type', 'Tipo Instalacion', 'Labor Situation', 'Marital Status', 
-                      'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Kit', 'Number Pay'])
+    feature_seg = st.selectbox("Seleccionar variable para segmentar", ['Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status', 
+                      'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay'])
 
     chart = alt.Chart(data).mark_bar().encode(alt.X(feature_x), y='count()', color = feature_seg).properties(width=800, height=500)
     st.altair_chart(chart)
@@ -86,18 +86,18 @@ def machine_learning_model(data, data_to_result):
     scaler2 = pickle.load(open(filename2, 'rb'))
     data['Quejas_sca'] = scaler2.transform(data['Quejas'].values.reshape(-1, 1))
     
-    filename3 = '../mvp_pkl/mt_sca.pkl'
+    filename3 = '../mvp_pkl/incidencias_sca.pkl'
     scaler3 = pickle.load(open(filename3, 'rb'))
-    data['MT_sca'] = scaler3.fit_transform(data['MT'].values.reshape(-1, 1))
+    data['Incidencias_sca'] = scaler3.fit_transform(data['Incidencias'].values.reshape(-1, 1))
 
-    data_filtered = data[['Gender', 'Housing Type', 'Tipo Instalacion', 'Labor Situation', 'Marital Status', 'Zip',
-                          'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Kit', 'Number Pay', 'Dias_Activo_sca',
-                          'Quejas_sca', 'MT_sca', 'Monitoring Status']]    
+    data_filtered = data[['Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status',
+                      'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay', 'Dias_Activo_sca',
+                      'Quejas_sca', 'Incidencias_sca', 'Status']]    
 
 
     
-    X = data_filtered.drop(['Monitoring Status'],axis=1)
-    y = data_filtered['Monitoring Status']
+    X = data_filtered.drop(['Status'],axis=1)
+    y = data_filtered['Status']
 
     # Target encoder
     filename = '../mvp_pkl/TE_encoder.pkl'

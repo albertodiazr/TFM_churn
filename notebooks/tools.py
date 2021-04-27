@@ -26,9 +26,11 @@ def plot_roc_curve(classifier, X_test, y_test):
     print('ROC AUC score: {0:0.2f}'.format(auc))
     
     plt.plot([0,1],[0,1],ls = '--', c = 'grey')
-    plt.plot(fpr, tpr)
-    plt.xlabel('fpr')
-    plt.ylabel('tpr')
+    plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % auc)
+    plt.title('ROC curve')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.legend(loc="lower right")
     plt.gcf().set_size_inches(8, 6)
     
     return

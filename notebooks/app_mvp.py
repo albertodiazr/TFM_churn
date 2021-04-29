@@ -50,6 +50,7 @@ def feature_engineering_data(data, fecha):
     
     # Días hasta el 18/04/2021 si OP y hasta cuando se dio de baja si BAJA
     data['Dias_Activo'] = 0
+#    fecha = datetime(2021, 4, 18)
     
     for i in range(len(data['Start Date'])):
         if data.loc[i, 'Status'] == 0:
@@ -63,7 +64,7 @@ def feature_engineering_data(data, fecha):
 def show_countplot(data):
 
     st.subheader("Data Visualization")
-    feature_x = st.selectbox("Seleccionar variable para la X", ['Property Type','Gender', 'Housing Type', 'Provincia', 'Labor Situation', 'Marital Status', 
+    feature_x = st.selectbox("Seleccionar variable para la X", ['Provincia','Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status', 
                        'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay'])
 
     feature_seg = st.selectbox("Seleccionar variable para segmentar", ['Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status', 
@@ -71,21 +72,21 @@ def show_countplot(data):
 
     chart = alt.Chart(data).mark_bar().encode(alt.X(feature_x), y='count()', color = feature_seg).properties(width=800, height=500)
     st.altair_chart(chart)
-
+    
 
 def machine_learning_model(data, data_to_result):
 
     st.header("Machine Learning Models")
 
-    filename1 = '../pkl/dias_activo_sca.pkl'
+    filename1 = '../mvp_pkl/dias_activo_sca.pkl'
     scaler1 = pickle.load(open(filename1, 'rb'))
     data['Dias_Activo_sca'] = scaler1.transform(data['Dias_Activo'].values.reshape(-1, 1))
     
-    filename2 = '../pkl/quejas_sca.pkl'
+    filename2 = '../mvp_pkl/quejas_sca.pkl'
     scaler2 = pickle.load(open(filename2, 'rb'))
     data['Quejas_sca'] = scaler2.transform(data['Quejas'].values.reshape(-1, 1))
     
-    filename3 = '../pkl/incidencias_sca.pkl'
+    filename3 = '../mvp_pkl/incidencias_sca.pkl'
     scaler3 = pickle.load(open(filename3, 'rb'))
     data['Incidencias_sca'] = scaler3.fit_transform(data['Incidencias'].values.reshape(-1, 1))
 
@@ -93,45 +94,39 @@ def machine_learning_model(data, data_to_result):
                       'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay', 'Dias_Activo_sca',
                       'Quejas_sca', 'Incidencias_sca', 'Status']]    
 
+
     
     X = data_filtered.drop(['Status'],axis=1)
     y = data_filtered['Status']
 
     # Target encoder
-    filename = '../pkl/TE_encoder.pkl'
+    filename = '../mvp_pkl/TE_encoder.pkl'
     TE_encoder = pickle.load(open(filename, 'rb'))
     X = TE_encoder.transform(X)
 
-    algoritmos = ["Decision Tree", "Logistic Regression", "Random Forest", "XGBoost"]
+    algoritmos = ["Decision Tree", "Logistic Regression", "Random Forest"]
     classifier = st.selectbox("Seleccionar algoritmo", algoritmos)
 
     if classifier == "Decision Tree":
-        filename = '../pkl/DT_model.pkl'
+        filename = '../mvp_pkl/DT_model.pkl'
         DT = pickle.load(open(filename, 'rb'))        
         y_pred = DT.predict(X)
         result = DT.predict_proba(X)[:,1].reshape(-1, 1)
         accuracy = DT.score(X, y)
         
     elif classifier == "Logistic Regression":
-        filename = '../pkl/LR_model.pkl'
+        filename = '../mvp_pkl/LR_model.pkl'
         LR = pickle.load(open(filename, 'rb'))        
         y_pred = LR.predict(X)
         result = LR.predict_proba(X)[:,1].reshape(-1, 1)
         accuracy = LR.score(X, y)
         
     elif classifier == "Random Forest":
-        filename = '../pkl/rfc_model.pkl'
+        filename = '../mvp_pkl/rfc_model.pkl'
         rfc = pickle.load(open(filename, 'rb'))       
         y_pred = rfc.predict(X)
         result = rfc.predict_proba(X)[:,1].reshape(-1, 1)
         accuracy = rfc.score(X, y)
-    
-    elif classifier == "XGBoost":
-        filename = '../pkl/xgb_model.pkl'
-        xgb = pickle.load(open(filename, 'rb'))       
-        y_pred = xgb.predict(X)
-        result = xgb.predict_proba(X)[:,1].reshape(-1, 1)
-        accuracy = xgb.score(X, y)
     
     else:
         raise NotImplementedError()
@@ -151,7 +146,8 @@ def machine_learning_model(data, data_to_result):
     cm = confusion_matrix(y, y_pred)
     plot_confusion_matrix(cm, classes=class_names, title='Confusion matrix')
     st.pyplot()
-  
+#    st.write("Confusion matrix: ", cm)  
+   
     proba_baja = pd.DataFrame(result, columns = ['Probabilidad de baja'])
     resultado = pd.concat([data_to_result, proba_baja], axis = 1)
 
@@ -167,27 +163,28 @@ def machine_learning_model(data, data_to_result):
     st.write(resultado_ordenado)
 
 def main():
-
+    
     st.title("Customer Churn Prediction app")
     
-    fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18)) 
-    
     uploaded_file = st.file_uploader("Subir archivo .xlsx", type="xlsx")
-      
+    
     if not uploaded_file:
         st.warning('Por favor, sube un fichero')
         st.stop()
     
     elif uploaded_file:
         data = pd.read_excel(uploaded_file)
-        data['Quejas'] = data['Quejas'].replace(np.nan, 0).astype('int')
-        data['Incidencias'] = data['Incidencias'].replace(np.nan, 0).astype('int')
-        data['Cliente'] = data['Cliente'].astype('str')
-        data['Status'] = data['Status'].astype('str').str.strip()
-        data['Status'] = data['Status'].replace({'ACTIVO': 0, 'BAJA': 1}).astype(int)
+    
+    data.drop(['Unnamed: 0'],axis=1,inplace=True)
+#        st.table(data)
 
+
+    fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18))
     
     st.header("Data Exploration")
+        
+#    data = pd.read_excel('../data/test_com_valencia.xlsx')
+
    
     st.subheader("Source Data")
     st.write("Número de clientes en el archivo: ", data.shape[0]) 
@@ -197,10 +194,6 @@ def main():
     feature_engineering_data(data, fecha)
     data_to_result = data.copy()
     show_countplot(data)
-     
-    # Control de flujo para activar ML
-    
     machine_learning_model(data, data_to_result)
 
 main()
-

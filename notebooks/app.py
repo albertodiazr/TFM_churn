@@ -13,6 +13,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 import pickle
+from PIL import Image
 
 def feature_engineering_data(data, fecha):
     
@@ -102,7 +103,8 @@ def machine_learning_model(data, data_to_result):
     TE_encoder = pickle.load(open(filename, 'rb'))
     X = TE_encoder.transform(X)
 
-    algoritmos = ["Decision Tree", "Logistic Regression", "Random Forest", "XGBoost"]
+    algoritmos = ["Por favor, elige un algoritmo para la predicción:",
+                  "Decision Tree", "Logistic Regression", "Random Forest", "XGBoost"]
     classifier = st.selectbox("Seleccionar algoritmo", algoritmos)
 
     if classifier == "Decision Tree":
@@ -134,7 +136,7 @@ def machine_learning_model(data, data_to_result):
         accuracy = xgb.score(X, y)
     
     else:
-        raise NotImplementedError()
+        st.stop()
 
     class_names = ['Activo','Baja']
 
@@ -154,7 +156,7 @@ def machine_learning_model(data, data_to_result):
   
     proba_baja = pd.DataFrame(result, columns = ['Probabilidad de baja'])
     resultado = pd.concat([data_to_result, proba_baja], axis = 1)
-
+    
     st.header("Customers with the highest likelihood of churning:")
     
     threshold = st.slider('Mostar clientes con probabilidad de baja superior a (%): ', 
@@ -166,41 +168,43 @@ def machine_learning_model(data, data_to_result):
     st.write("Número de clientes mostrados: ", resultado_ordenado.shape[0])    
     st.write(resultado_ordenado)
 
-def main():
+    if st.button('Extraer a .xlsx'):
+        resultado_ordenado.to_excel("../data/prediction_result.xlsx", index = False)
 
-    st.title("Customer Churn Prediction app")
+# Main
+header_pic = Image.open('../images/churn_icon.png')
+st.image(header_pic, use_column_width=True)
+st.title("Customer Churn Prediction app")
     
-    fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18)) 
+fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18)) 
     
-    uploaded_file = st.file_uploader("Subir archivo .xlsx", type="xlsx")
+uploaded_file = st.file_uploader("Subir archivo .xlsx", type="xlsx")
       
-    if not uploaded_file:
-        st.warning('Por favor, sube un fichero')
-        st.stop()
+if not uploaded_file:
+    st.warning('Por favor, sube un fichero')
+    st.stop()
     
-    elif uploaded_file:
-        data = pd.read_excel(uploaded_file)
-        data['Quejas'] = data['Quejas'].replace(np.nan, 0).astype('int')
-        data['Incidencias'] = data['Incidencias'].replace(np.nan, 0).astype('int')
-        data['Cliente'] = data['Cliente'].astype('str')
-        data['Status'] = data['Status'].astype('str').str.strip()
-        data['Status'] = data['Status'].replace({'ACTIVO': 0, 'BAJA': 1}).astype(int)
+elif uploaded_file:
+    data = pd.read_excel(uploaded_file)
+    data['Quejas'] = data['Quejas'].replace(np.nan, 0).astype('int')
+    data['Incidencias'] = data['Incidencias'].replace(np.nan, 0).astype('int')
+    data['Cliente'] = data['Cliente'].astype('str')
+    data['Status'] = data['Status'].astype('str').str.strip()
+    data['Status'] = data['Status'].replace({'ACTIVO': 0, 'BAJA': 1}).astype(int)
 
-    
-    st.header("Data Exploration")
+st.header("Data Exploration")
    
-    st.subheader("Source Data")
-    st.write("Número de clientes en el archivo: ", data.shape[0]) 
-    if st.checkbox("Show Source Data"):
-        st.write(data)
-   
-    feature_engineering_data(data, fecha)
-    data_to_result = data.copy()
-    show_countplot(data)
-     
-    # Control de flujo para activar ML
-    
-    machine_learning_model(data, data_to_result)
+st.subheader("Source Data")
+st.write("Número de clientes en el archivo: ", data.shape[0]) 
+if st.checkbox("Show Source Data"):
+    st.write(data)
 
-main()
+feature_engineering_data(data, fecha)
+data_to_result = data.copy()
+
+show_countplot(data)
+
+machine_learning_model(data, data_to_result)
+
+
 

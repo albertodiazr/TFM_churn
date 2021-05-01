@@ -175,7 +175,6 @@ def main():
     elif uploaded_file:
         data = pd.read_excel(uploaded_file)
     
-    data.drop(['Unnamed: 0'],axis=1,inplace=True)
 #        st.table(data)
 
 

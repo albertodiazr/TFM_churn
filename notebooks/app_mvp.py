@@ -14,23 +14,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 import pickle
 
-def feature_engineering_data(data, fecha):
+def feature_engineering_data(data):
     
     data['Born Date'] = data['Born Date'].replace(np.nan, datetime(1970, 1, 1))
-    data['Edad'] = 0
-    fecha = datetime(2021, 4, 18)
 
-    for i in range(len(data['Born Date'])):
-        if data.loc[i, 'Status'] == 0:
-            data.loc[i,'Edad'] = ((fecha - data.loc[i,'Born Date']).days)/365
-        else:
-            data.loc[i,'Edad'] = ((data.loc[i,'Status Date'] - data.loc[i,'Born Date']).days)/365
+    data['Edad'] = ((data['Fecha Alta'] - data['Born Date']).dt.days)/365
     
-    for i in range(len(data['Edad'])):
-        if data.loc[i, 'Edad'] < 18:
-            data.loc[i, 'Edad'] = data['Edad'].mean()
-        else:
-            continue
+    edad_mean = data['Edad'].mean()
+    data['Edad'] = data['Edad'].apply(lambda x: edad_mean if x<18 else x)
         
     # Mapping Edad 
     data.loc[data['Edad'] <= 30, 'Rango_Edad'] = "18-30"
@@ -42,21 +33,11 @@ def feature_engineering_data(data, fecha):
     data.loc[data['Edad'] > 80, 'Rango_Edad'] = "+80"
     
     # Mapping Income Amount
-    data.loc[data['Income Amount'] <= 1000, 'Income'] = "0-1000"
-    data.loc[(data['Income Amount'] > 1000) & (data['Income Amount'] <= 1500), 'Income'] = "1000-1500"
-    data.loc[(data['Income Amount'] > 1500) & (data['Income Amount'] <= 2000), 'Income'] = "1500-2000"
-    data.loc[(data['Income Amount'] > 2000) & (data['Income Amount'] <= 3000), 'Income'] = "2000-3000"
-    data.loc[data['Income Amount'] > 3000, 'Income'] = "+3000"
-    
-    # Días hasta el 18/04/2021 si OP y hasta cuando se dio de baja si BAJA
-    data['Dias_Activo'] = 0
-#    fecha = datetime(2021, 4, 18)
-    
-    for i in range(len(data['Start Date'])):
-        if data.loc[i, 'Status'] == 0:
-            data.loc[i,'Dias_Activo'] = (fecha - data.loc[i,'Start Date']).days
-        else:
-            data.loc[i,'Dias_Activo'] = (data.loc[i,'Status Date'] - data.loc[i,'Start Date']).days
+    data.loc[data['Ingresos'] <= 1000, 'Income'] = "0-1000"
+    data.loc[(data['Ingresos'] > 1000) & (data['Ingresos'] <= 1500), 'Income'] = "1000-1500"
+    data.loc[(data['Ingresos'] > 1500) & (data['Ingresos'] <= 2000), 'Income'] = "1500-2000"
+    data.loc[(data['Ingresos'] > 2000) & (data['Ingresos'] <= 3000), 'Income'] = "2000-3000"
+    data.loc[data['Ingresos'] > 3000, 'Income'] = "+3000"
     
     return data
 
@@ -64,11 +45,11 @@ def feature_engineering_data(data, fecha):
 def show_countplot(data):
 
     st.subheader("Data Visualization")
-    feature_x = st.selectbox("Seleccionar variable para la X", ['Provincia','Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status', 
-                       'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay'])
+    feature_x = st.selectbox("Seleccionar variable para la X", ['Tipo Propiedad','Gender', 'Tipo Inmueble', 'Provincia', 'Situacion Laboral', 'Estado Civil', 
+                       'Pais', 'Rango_Edad', 'Income','Precio Total', 'Precio Contado', 'Pagos Anuales'])
 
-    feature_seg = st.selectbox("Seleccionar variable para segmentar", ['Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status', 
-                      'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay'])
+    feature_seg = st.selectbox("Seleccionar variable para segmentar", ['Precio Contado','Gender','Tipo Propiedad','Tipo Inmueble', 'Provincia', 'Situacion Laboral', 'Estado Civil', 
+                       'Pais', 'Rango_Edad', 'Income', 'Pagos Anuales','Precio Total'])
 
     chart = alt.Chart(data).mark_bar().encode(alt.X(feature_x), y='count()', color = feature_seg).properties(width=800, height=500)
     st.altair_chart(chart)
@@ -78,9 +59,9 @@ def machine_learning_model(data, data_to_result):
 
     st.header("Machine Learning Models")
 
-    filename1 = '../mvp_pkl/dias_activo_sca.pkl'
+    filename1 = '../mvp_pkl/consumo_sca.pkl'
     scaler1 = pickle.load(open(filename1, 'rb'))
-    data['Dias_Activo_sca'] = scaler1.transform(data['Dias_Activo'].values.reshape(-1, 1))
+    data['Consumo_sca'] = scaler1.transform(data['Consumo Mes'].values.reshape(-1, 1))
     
     filename2 = '../mvp_pkl/quejas_sca.pkl'
     scaler2 = pickle.load(open(filename2, 'rb'))
@@ -90,14 +71,12 @@ def machine_learning_model(data, data_to_result):
     scaler3 = pickle.load(open(filename3, 'rb'))
     data['Incidencias_sca'] = scaler3.fit_transform(data['Incidencias'].values.reshape(-1, 1))
 
-    data_filtered = data[['Gender', 'Housing Type', 'Property Type', 'Labor Situation', 'Marital Status',
-                      'Provincia', 'Nationality', 'Rango_Edad', 'Income', 'Rango Precio', 'Number Pay', 'Dias_Activo_sca',
-                      'Quejas_sca', 'Incidencias_sca', 'Status']]    
-
-
-    
-    X = data_filtered.drop(['Status'],axis=1)
-    y = data_filtered['Status']
+    data_filtered = data[['Gender', 'Tipo Inmueble', 'Tipo Propiedad', 'Situacion Laboral', 'Estado Civil', 
+                      'Provincia', 'Pais', 'Rango_Edad', 'Income', 'Precio Contado', 'Pagos Anuales', 'Precio Total',
+                      'Quejas_sca', 'Incidencias_sca', 'Consumo_sca', 'Estado']]   
+   
+    X = data_filtered.drop(['Estado'],axis=1)
+    y = data_filtered['Estado']
 
     # Target encoder
     filename = '../mvp_pkl/TE_encoder.pkl'
@@ -174,23 +153,15 @@ def main():
     
     elif uploaded_file:
         data = pd.read_excel(uploaded_file)
-    
-#        st.table(data)
-
-
-    fecha = st.date_input("Fecha de la extracción", value = datetime(2021, 4, 18))
-    
+     
     st.header("Data Exploration")
         
-#    data = pd.read_excel('../data/test_com_valencia.xlsx')
-
-   
     st.subheader("Source Data")
     st.write("Número de clientes en el archivo: ", data.shape[0]) 
     if st.checkbox("Show Source Data"):
         st.write(data)
    
-    feature_engineering_data(data, fecha)
+    feature_engineering_data(data)
     data_to_result = data.copy()
     show_countplot(data)
     machine_learning_model(data, data_to_result)

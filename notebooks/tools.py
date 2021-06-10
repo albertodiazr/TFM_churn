@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import itertools
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
@@ -58,3 +59,14 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    
+ 
+def heat_map(df):
+    
+    corr = df.corr()
+    mask = np.zeros_like(corr, dtype=np.bool)
+    mask[np.triu_indices_from(mask)] = True
+    f, ax = plt.subplots(figsize=(11, 9))
+    cmap = sns.diverging_palette(10, 220, as_cmap=True)
+    sns.heatmap(corr, annot=True, mask=mask, cmap=cmap, vmax=1, center=0,
+                square=True, linewidths=.5, cbar_kws={"shrink": .5});

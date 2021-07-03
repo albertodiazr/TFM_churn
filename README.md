@@ -1,25 +1,5 @@
 # TFM Customer Churn Prediction
 
-
-<img src="images/churn_icon.png" width="400"/>
-
-
-### Objetivo
+<img src="images/churn_icon.png" align=left width="400"/>  
 
 Proyecto de Machine Learning cuya finalidad es predecir la probabilidad de baja de cada cliente de una empresa que instala calderas en inmuebles para la producción energética, vendiendo posteriormente también el combustible necesario para su funcionamiento.
-
-
-### Guía rápida
-
-1. **Clonar** el repositorio manteniendo la estructura de carpetas y su contenido.
-2. Ejecutar los **notebooks** en el orden por el que están nombrados.
-    - MVP: Los notebooks 2, 3 y 4 han sido creados a modo de MVP, sobre los que se han realizado las iteraciones con un subconjunto del dataset para ser finalmente aplicados sobre todos los datos, por lo que son posibles 2 itinerarios de ejecución: 
-
-    <img src="images/01.jpg" width="400"/>
-    
-    
-3. **Frontend**: Navegar mediante la terminal hasta la carpeta `notebooks` y ejecutar el siguiente comando:
-
-    ```
-    streamlit run app.py
-    ```

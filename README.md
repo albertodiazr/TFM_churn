@@ -17,7 +17,7 @@ Proyecto de Machine Learning cuya finalidad es predecir la probabilidad de baja 
     - MVP: Los notebooks 2, 3 y 4 han sido creados a modo de MVP, sobre los que se han realizado las iteraciones con un subconjunto del dataset para ser finalmente aplicados sobre todos los datos, por lo que son posibles 2 itinerarios de ejecución: 
   
   
-<img src="images/01.jpg" align = center width="400"/>
+<img src="images/01.jpg" width="400"/>
       
     
 4. Frontend: Navegar mediante la terminal hasta la carpeta `notebooks` y ejecutar el siguiente comando:

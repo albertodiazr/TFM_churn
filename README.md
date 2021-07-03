@@ -15,6 +15,7 @@ Proyecto de Machine Learning cuya finalidad es predecir la probabilidad de baja 
 2. Ejecutar los **notebooks** en el orden por el que están nombrados.
     - MVP: Los notebooks 2, 3 y 4 han sido creados a modo de MVP, sobre los que se han realizado las iteraciones con un subconjunto del dataset para ser finalmente aplicados sobre todos los datos, por lo que son posibles 2 itinerarios de ejecución: 
 
+
     <img src="images/01.jpg" width="400"/>
     
     

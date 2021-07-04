@@ -47,10 +47,10 @@ def feature_engineering_data(data):
 def show_countplot(data):
 
     st.subheader("Data Visualization")
-    feature_x = st.selectbox("Seleccionar variable para la X", ['Tipo Inmueble', 'Tipo Propiedad','Gender', 'Provincia', 'Situacion Laboral', 'Estado Civil', 
+    feature_x = st.selectbox("Select feature for X axis:", ['Tipo Inmueble', 'Tipo Propiedad','Gender', 'Provincia', 'Situacion Laboral', 'Estado Civil', 
                        'Pais', 'Rango_Edad', 'Income','Precio Total', 'Precio Contado', 'Pagos Anuales'])
 
-    feature_seg = st.selectbox("Seleccionar variable para segmentar", ['Precio Contado','Gender','Tipo Propiedad','Tipo Inmueble', 'Provincia', 'Situacion Laboral', 'Estado Civil', 
+    feature_seg = st.selectbox("Select feature to segment:", ['Precio Contado','Gender','Tipo Propiedad','Tipo Inmueble', 'Provincia', 'Situacion Laboral', 'Estado Civil', 
                        'Pais', 'Rango_Edad', 'Income', 'Pagos Anuales','Precio Total'])
 
     chart = alt.Chart(data).mark_bar().encode(alt.X(feature_x), y='count()', color = feature_seg).properties(width=800, height=500)
@@ -85,9 +85,9 @@ def machine_learning_model(data, data_to_result):
     TE_encoder = pickle.load(open(filename, 'rb'))
     X = TE_encoder.transform(X)
 
-    algoritmos = ["Por favor, elige un algoritmo para la predicción:",
+    algoritmos = ["Please choose an algorithm for prediction",
                   "Decision Tree", "Logistic Regression", "Random Forest", "Voting Classifier"]
-    classifier = st.selectbox("Seleccionar algoritmo", algoritmos)
+    classifier = st.selectbox("Select algorithm:", algoritmos)
 
     if classifier == "Decision Tree":
         filename = '../pkl/DT_model.pkl'
@@ -129,6 +129,7 @@ def machine_learning_model(data, data_to_result):
     st.write('')  
     
     st.header("Results Resume:")
+    st.write("Churn % combining building type and upfront payment")
     resume = pd.crosstab(resultado['Tipo Inmueble'], resultado['Precio Contado'], values=resultado.Churn_Probability, aggfunc='mean').round(4)*100
     fig, ax = plt.subplots(figsize=(11, 9))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
@@ -139,16 +140,16 @@ def machine_learning_model(data, data_to_result):
     st.write('')  
     st.header("Customers with the highest likelihood of churning:")
     
-    threshold = st.slider('Mostar clientes con probabilidad de baja superior a (%): ', 
+    threshold = st.slider('Show customers with churn probability greater than (%): ', 
                           min_value=0.0, max_value=100.0, value = 70.0, step = 0.5)
     resultado_filtrado = resultado[(resultado['Churn_Probability'] >= threshold/100)]
     resultado_ordenado = resultado_filtrado.sort_values('Churn_Probability',ascending=False)
     
-    st.write("Treshold seleccionado (%): ", threshold)
-    st.write("Número de clientes mostrados: ", resultado_ordenado.shape[0])    
+    st.write("Selected treshold (%): ", threshold)
+    st.write("Number of customers showed: ", resultado_ordenado.shape[0])    
     st.write(resultado_ordenado)
 
-    if st.button('Extraer a .xlsx'):
+    if st.button('Extract to .xlsx'):
         resultado_ordenado.to_excel("../data/prediction_result.xlsx", index = False)
 
 # Main
@@ -163,12 +164,16 @@ st.title("Customer Churn Prediction app")
 
 st.sidebar.image(header_pic, use_column_width=True)
 st.sidebar.markdown("## Customer Churn Prediction app")
-st.sidebar.markdown('Instrucciones para ejecutar la app:')
-     
-uploaded_file = st.file_uploader("Subir archivo .xlsx", type="xlsx")
+st.sidebar.markdown('When selecting the algorithm for the prediction, consider the following results:')
+st.sidebar.info('🥇 Decision Tree Classifier')
+st.sidebar.info('🥈 Voting Classifier')
+st.sidebar.info('🥉 Logistic Regression')
+st.sidebar.info('😢 Random Forest Classifier')
+
+uploaded_file = st.file_uploader("Upload file .xlsx", type="xlsx")
       
 if not uploaded_file:
-    st.warning('Por favor, sube un fichero')
+    st.warning('Please upload a file')
     st.stop()
     
 elif uploaded_file:
@@ -182,7 +187,7 @@ elif uploaded_file:
 st.header("Data Exploration")
    
 st.subheader("Source Data")
-st.write("Número de clientes en el archivo: ", data.shape[0]) 
+st.write("Number of customers in the file: ", data.shape[0]) 
 if st.checkbox("Show Source Data"):
     st.write(data)
 

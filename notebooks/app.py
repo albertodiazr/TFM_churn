@@ -3,16 +3,8 @@ import altair as alt
 import pandas as pd
 import seaborn as sns
 import numpy as np
-import itertools
-import datetime as dt
 import matplotlib.pyplot as plt
-from tools import dataoveriew, plot_roc_curve, plot_confusion_matrix
 from datetime import datetime
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.metrics import confusion_matrix, classification_report
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
 import pickle
 from PIL import Image
 
@@ -196,6 +188,3 @@ data_to_result = data.copy()
 
 show_countplot(data)
 machine_learning_model(data, data_to_result)
-
-
-
